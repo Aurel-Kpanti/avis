@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Votre avis – THE K SHOP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#f3f3ef;--ink:#17171c;--mute:#5d5d68;--line:#d6d6cf;--field:#fff;--accent:#2a45ff;--on-accent:#fff;--star:#ffb400;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121216;--ink:#f1f1ee;--mute:#a4a4af;--line:#34343d;--field:#1b1b21;--accent:#7b8cff;--on-accent:#0c0c12}}
+:root[data-theme="dark"]{--bg:#121216;--ink:#f1f1ee;--mute:#a4a4af;--line:#34343d;--field:#1b1b21;--accent:#7b8cff;--on-accent:#0c0c12}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 "DM Sans",system-ui,sans-serif}
+main{max-width:30rem;margin:0 auto;padding:2rem 1.25rem 3rem}
+.brand{font:800 1rem/1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:.04em;margin:0 0 2.5rem}
+h1{font:800 clamp(2.4rem,11vw,3.4rem)/1 "Bricolage Grotesque",system-ui,sans-serif;margin:0 0 .75rem;letter-spacing:-.02em}
+.lead{color:var(--mute);margin:0 0 2rem;max-width:26rem}
+label,legend{display:block;font-weight:700;margin:0 0 .5rem;padding:0}
+fieldset{border:0;margin:0 0 1.5rem;padding:0}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:10px;padding:.8rem .9rem;margin:0 0 1.5rem}
+textarea{min-height:7rem;resize:vertical}
+input:focus-visible,textarea:focus-visible,.star:focus-visible,button.send:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.stars{display:flex;gap:.35rem}
+.star{display:flex;align-items:center;justify-content:center;padding:0;flex:1;aspect-ratio:1;max-width:3.6rem;border:1.5px solid var(--line);background:var(--field);border-radius:12px;font-size:1.7rem;line-height:1;color:var(--line);cursor:pointer;transition:transform .12s,color .12s,border-color .12s}
+.star.on{color:var(--star);border-color:var(--star)}
+.star:active{transform:scale(.92)}
+.hint{min-height:1.5rem;margin:.6rem 0 0;color:var(--mute);font-size:.95rem}
+.err{color:#d6322d;font-weight:500;min-height:1.4rem;margin:0 0 .75rem}
+button.send{width:100%;border:0;border-radius:12px;background:var(--accent);color:var(--on-accent);font:700 1.05rem "DM Sans",system-ui,sans-serif;padding:1rem;cursor:pointer}
+.fine{color:var(--mute);font-size:.9rem;margin:1rem 0 0}
+@media (prefers-reduced-motion:reduce){.star{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <p class="brand">THE K SHOP</p>
+  <h1>Alors, votre commande ?</h1>
+  <p class="lead">Votre avis nous aide à choisir de meilleurs articles. Cela prend une minute.</p>
+
+  <fieldset>
+    <legend id="noteLabel">Votre note</legend>
+    <div class="stars" role="radiogroup" aria-labelledby="noteLabel" id="stars"></div>
+    <p class="hint" id="hint" aria-live="polite"></p>
+  </fieldset>
+
+  <label for="article">Article reçu</label>
+  <input id="article" type="text" placeholder="Ex. : baskets blanches, robe wax, sac" autocomplete="off">
+
+  <label for="comment">Votre commentaire</label>
+  <textarea id="comment" placeholder="Qualité, taille, livraison, emballage…"></textarea>
+
+  <label for="name">Votre prénom</label>
+  <input id="name" type="text" placeholder="Ex. : Koffi" autocomplete="given-name">
+
+  <p class="err" id="err" role="alert"></p>
+  <button class="send" id="send" type="button">Envoyer mon avis sur WhatsApp</button>
+  <p class="fine">WhatsApp s’ouvre avec votre message déjà écrit. Il vous reste à appuyer sur envoyer.</p>
+</main>
+<script>
+(function(){
+  var NUMBER="22955204456";
+  var labels=["","Décevant","Moyen","Correct","Très bien","Excellent"];
+  var note=0, box=document.getElementById("stars"), hint=document.getElementById("hint");
+  for(var i=1;i<=5;i++){
+    var b=document.createElement("button");
+    b.type="button"; b.className="star"; b.textContent="★";
+    b.setAttribute("role","radio"); b.setAttribute("aria-checked","false");
+    b.setAttribute("aria-label",i+" sur 5");
+    (function(n){b.addEventListener("click",function(){setNote(n)})})(i);
+    box.appendChild(b);
+  }
+  function setNote(n){
+    note=n; hint.textContent=n+"/5 · "+labels[n];
+    var s=box.children;
+    for(var i=0;i<s.length;i++){
+      var on=i<n; s[i].classList.toggle("on",on);
+      s[i].setAttribute("aria-checked",String(i===n-1));
+    }
+    document.getElementById("err").textContent="";
+  }
+  document.getElementById("send").addEventListener("click",function(){
+    var err=document.getElementById("err");
+    if(!note){err.textContent="Choisissez une note de 1 à 5 étoiles.";return}
+    var g=function(id){return document.getElementById(id).value.trim()};
+    var lines=["*Avis THE K SHOP*",
+      "Note : "+"★".repeat(note)+"☆".repeat(5-note)+" ("+note+"/5)"];
+    if(g("article"))lines.push("Article : "+g("article"));
+    if(g("comment"))lines.push("Commentaire : "+g("comment"));
+    if(g("name"))lines.push("De la part de : "+g("name"));
+    var url="https://wa.me/"+NUMBER+"?text="+encodeURIComponent(lines.join("\n"));
+    var w=null; try{w=window.open(url,"_blank")}catch(e){}
+    if(!w){window.location.href=url}
+  });
+})();
+</script>
+</body>
+</html>

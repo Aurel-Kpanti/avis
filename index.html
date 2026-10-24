@@ -187,6 +187,31 @@ input:focus-visible,textarea:focus-visible{background:rgba(255,255,255,.5)}
 :root{--gl:rgba(255,255,255,.4);--glow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -1px 2px rgba(255,255,255,.3),0 6px 18px rgba(40,30,120,.15)}
 .card,.card:hover,#proof li,input,textarea,.star,.tile,.chips button,.btn.ghost{-webkit-backdrop-filter:none;backdrop-filter:none}
 .im{contain:paint}
+
+.badge.b2{background:#d61f8c;color:#fff}.badge.lim{background:#ff7a1a;color:#fff}.badge.out{background:#4a4a55;color:#fff}
+.bds{position:absolute;top:.5rem;left:.5rem;display:flex;flex-direction:column;gap:.3rem;align-items:flex-start;z-index:1}.bds .badge{position:static}
+.card.out .im img{filter:grayscale(1);opacity:.55}
+.old{color:var(--mute);font-weight:500;font-size:.85em;text-decoration:line-through}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.ov{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(25,12,70,.38)}
+.ov[hidden],.fab[hidden]{display:none}
+.pn{position:relative;width:min(34rem,100%);max-height:90vh;overflow:auto;overscroll-behavior:contain;padding:1rem 1rem calc(1.4rem + env(safe-area-inset-bottom,0px));border-radius:26px 26px 0 0;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--glow);animation:sheet .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes sheet{from{transform:translateY(40px);opacity:0}}
+@media(min-width:44rem){.ov{align-items:center}.pn{border-radius:26px}}
+.x{position:sticky;top:0;float:right;z-index:3;width:2.4rem;height:2.4rem;border-radius:50%;border:1px solid var(--glb);background:rgba(255,255,255,.9);color:var(--ink);font-size:1rem;cursor:pointer}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:18px;scrollbar-width:none;margin-bottom:.5rem}.gal::-webkit-scrollbar{display:none}
+.gal>div{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:4/5;overflow:hidden;position:relative;background:#dcecf8}
+.gal img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;transition:transform .35s}.gal img.z{transform:scale(2.3);cursor:zoom-out}
+.pn h3{font:400 2.1rem/1 "Instrument Serif",Georgia,serif;margin:.2rem 0 .4rem}
+.lbl{font-weight:700;margin:1rem 0 .4rem}
+.qty{display:flex;align-items:center;gap:.8rem;margin:1rem 0}.qty button{width:2.3rem;height:2.3rem;border-radius:50%;border:1px solid var(--glb);background:rgba(255,255,255,.75);font-size:1.1rem;cursor:pointer;color:var(--ink)}
+.ci{display:flex;justify-content:space-between;gap:1rem;padding:.8rem 0;border-bottom:1px solid rgba(16,32,46,.12)}.ci>div{display:flex;flex-direction:column;gap:.15rem}
+.ci .qty{margin:.3rem 0 0}.rm{border:0;background:none;font-size:1rem;cursor:pointer;color:var(--mute);align-self:flex-start}
+.tot{display:flex;justify-content:space-between;font-weight:800;font-size:1.15rem;margin:1rem 0}
+.fab{position:fixed;z-index:60;right:.8rem;bottom:calc(env(safe-area-inset-bottom,0px) + 5.6rem);padding:.85rem 1.2rem;border-radius:99px;border:1px solid rgba(255,255,255,.7);background:linear-gradient(110deg,#10202e,#3a2bd0 55%,#d61f8c);color:#fff;font:700 .95rem "DM Sans",system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 26px rgba(58,43,208,.4)}
+@media(min-width:44rem){.fab{bottom:1.5rem;right:1.5rem}}
+.fab.bump{animation:pop .5s}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 9.5rem);translate:-50% 12px;z-index:95;padding:.6rem 1rem;border-radius:99px;background:var(--ink);color:#fff;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s,translate .25s}.toast.on{opacity:1;translate:-50% 0}
 .in{animation:in .4s ease both}
 @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.star,.tile,.in{transition:none;animation:none}}
@@ -277,6 +302,8 @@ input:focus-visible,textarea:focus-visible{background:rgba(255,255,255,.5)}
   </section>
   </div>
 </main>
+<button class="fab" id="fab" type="button" hidden></button><div class="toast" id="toast" role="status"></div>
+<div class="ov" id="ov" hidden><div class="pn" id="pn" role="dialog" aria-modal="true" aria-label="Détail"><button class="x" id="x" type="button" aria-label="Fermer">✕</button><div id="pc"></div></div></div>
 <script>
 (function(){
   var NUMBER="22955204456";
@@ -370,25 +397,87 @@ input:focus-visible,textarea:focus-visible{background:rgba(255,255,255,.5)}
     window.scrollTo(0,0);
   }
   function price(p){var n=Number(p);return(p===""||p==null||isNaN(n))?String(p||""):n.toLocaleString("fr-FR")+" FCFA"}
+  var cart=[],ov=$("ov"),pc=$("pc"),tt;
+  try{cart=JSON.parse(localStorage.getItem("kcart")||"[]")}catch(e){}
+  function lst(s){return String(s||"").split(",").map(function(x){return x.trim()}).filter(Boolean)}
+  function num(v){var n=Number(v);return(isNaN(n)||v==="")?0:n}
+  function fcfa(n){return n.toLocaleString("fr-FR")+" FCFA"}
+  function imgs(p){return[p.Image].concat(lst(p.Images)).filter(Boolean).map(function(u){try{return new URL(u,location.href).href}catch(e){return u}})}
+  function stk(p){var s=String(p.Stock||"");return/pui|^0$/.test(s)?"out":/limit/.test(s)?"lim":""}
+  function off(p){var a=num(p.Prix),b=num(p.PrixBarre);return(b>a&&a>0)?Math.round((1-a/b)*100):0}
+  function priceEl(p){var w=el("span","pr",price(p.Prix));if(off(p)){w.appendChild(document.createTextNode(" "));w.appendChild(el("s","old",fcfa(num(p.PrixBarre))))}return w}
+  function toast(m){var t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("on")},1700)}
+  function save(){try{localStorage.setItem("kcart",JSON.stringify(cart))}catch(e){}fab()}
+  function fab(){var f=$("fab"),n=0,t=0;cart.forEach(function(i){n+=i.q;t+=i.p*i.q});f.hidden=!n;f.textContent="🛍 Panier · "+n+(t?" · "+fcfa(t):"")}
+  function show(){ov.hidden=false;document.documentElement.style.overflow="hidden";$("x").focus()}
+  function closeM(){ov.hidden=true;document.documentElement.style.overflow=""}
+  function addCart(p,t,c,q){var k=[p.Nom,t,c].join("|"),f=cart.filter(function(i){return i.k===k})[0];
+    if(f)f.q+=q;else cart.push({k:k,n:p.Nom,p:num(p.Prix),t:t,c:c,q:q});save();var b=$("fab");b.classList.remove("bump");void b.offsetWidth;b.classList.add("bump")}
   function card(p){
-    var c=el("article","card rv"),im=el("div","im"),b=el("div","b");
-    if(p.Image){var i=el("img");i.loading="lazy";i.decoding="async";i.alt=p.Nom||"";i.src=p.Image;i.onerror=function(){i.remove();im.classList.add("ph")};im.appendChild(i)}else im.classList.add("ph")
-    if(p.Nouveau==="oui")im.appendChild(el("span","badge","Nouveau"));
-    b.appendChild(el("span","cat",p.Categorie||""));b.appendChild(el("span","nm",p.Nom||""));b.appendChild(el("span","pr",price(p.Prix)));
+    var c=el("article","card rv"+(stk(p)==="out"?" out":"")),im=el("div","im"),b=el("div","b"),bd=el("div","bds"),u=imgs(p)[0],s=stk(p);
+    if(u){var i=el("img");i.loading="lazy";i.decoding="async";i.alt=p.Nom||"";i.src=u;i.onerror=function(){i.remove();im.classList.add("ph")};im.appendChild(i)}else im.classList.add("ph");
+    if(p.Nouveau==="oui")bd.appendChild(el("span","badge","Nouveau"));
+    if(off(p))bd.appendChild(el("span","badge b2","-"+off(p)+"%"));
+    if(s)bd.appendChild(el("span","badge "+s,s==="out"?"Épuisé":"Stock limité"));
+    im.appendChild(bd);
+    b.appendChild(el("span","cat",p.Categorie||""));b.appendChild(el("span","nm",p.Nom||""));b.appendChild(priceEl(p));
     if(p.Description)b.appendChild(el("span","cat",p.Description));
-    var a=el("a","btn","Commander sur WhatsApp");a.target="_blank";a.rel="noopener";
-    a.href=wa("Bonjour THE K SHOP, je suis intéressé(e) par : "+p.Nom+" ("+price(p.Prix)+")");
-    b.appendChild(a);c.appendChild(im);c.appendChild(b);return c;
+    var a=el("button","btn",s==="out"?"Épuisé":"Voir l’article");a.type="button";b.appendChild(a);c.appendChild(im);c.appendChild(b);
+    c.addEventListener("click",function(){openP(p)});return c;
   }
+  function openP(p){
+    var sz=lst(p.Tailles),co=lst(p.Couleurs),pick={t:"",c:""},q=1,out=stk(p)==="out",im=imgs(p),err=el("p","err","");
+    pc.textContent="";var g=el("div","gal");
+    (im.length?im:[""]).forEach(function(u){var d=el("div");
+      if(u){var i=el("img");i.src=u;i.alt=p.Nom||"";i.addEventListener("click",function(e){var r=i.getBoundingClientRect();i.style.transformOrigin=((e.clientX-r.left)/r.width*100)+"% "+((e.clientY-r.top)/r.height*100)+"%";i.classList.toggle("z")});d.appendChild(i)}else d.className="im ph";
+      g.appendChild(d)});
+    pc.appendChild(g);
+    if(im.length>1){var n=el("p","cat","1 / "+im.length);n.style.textAlign="center";g.addEventListener("scroll",function(){n.textContent=(Math.round(g.scrollLeft/g.clientWidth)+1)+" / "+im.length});pc.appendChild(n)}
+    pc.appendChild(el("p","cat",p.Categorie||""));pc.appendChild(el("h3","",p.Nom||""));pc.appendChild(priceEl(p));
+    if(p.Description)pc.appendChild(el("p","lead",p.Description));
+    function group(t,l,k){if(!l.length)return;pc.appendChild(el("p","lbl",t));var w=el("div","chips");
+      l.forEach(function(v){var b=el("button","",v);b.type="button";b.addEventListener("click",function(){pick[k]=v;err.textContent="";w.querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b)})});w.appendChild(b)});pc.appendChild(w)}
+    group("Taille",sz,"t");group("Couleur",co,"c");
+    var qr=el("div","qty"),mi=el("button","","−"),qv=el("span","","1"),pl=el("button","","+");mi.type=pl.type="button";
+    mi.addEventListener("click",function(){q=Math.max(1,q-1);qv.textContent=q});pl.addEventListener("click",function(){q=Math.min(20,q+1);qv.textContent=q});
+    qr.appendChild(mi);qr.appendChild(qv);qr.appendChild(pl);pc.appendChild(qr);pc.appendChild(err);
+    var add=el("button","btn",out?"Épuisé":"Ajouter au panier");add.type="button";add.disabled=out;
+    add.addEventListener("click",function(){
+      if(sz.length&&!pick.t){err.textContent="Choisissez une taille.";return}
+      if(co.length&&!pick.c){err.textContent="Choisissez une couleur.";return}
+      addCart(p,pick.t,pick.c,q);closeM();toast("Ajouté au panier ✓")});
+    pc.appendChild(add);show();
+  }
+  function cartView(){
+    pc.textContent="";pc.appendChild(el("h3","","Mon panier"));
+    if(!cart.length){pc.appendChild(el("p","lead","Votre panier est vide."));return}
+    var tot=0,lines=[];
+    cart.forEach(function(it,i){tot+=it.p*it.q;
+      var v=[it.t&&"taille "+it.t,it.c].filter(Boolean).join(", ");lines.push("• "+it.q+" × "+it.n+(v?" ("+v+")":"")+(it.p?" — "+fcfa(it.p*it.q):""));
+      var r=el("div","ci"),t=el("div","");t.appendChild(el("span","nm",it.n));if(v)t.appendChild(el("span","cat",v));if(it.p)t.appendChild(el("span","pr",fcfa(it.p*it.q)));
+      var s=el("div","qty"),m=el("button","","−"),qv=el("span","",""+it.q),pl=el("button","","+");m.type=pl.type="button";
+      m.addEventListener("click",function(){it.q=Math.max(1,it.q-1);save();cartView()});pl.addEventListener("click",function(){it.q=Math.min(20,it.q+1);save();cartView()});
+      s.appendChild(m);s.appendChild(qv);s.appendChild(pl);t.appendChild(s);
+      var x=el("button","rm","✕");x.type="button";x.setAttribute("aria-label","Retirer");x.addEventListener("click",function(){cart.splice(i,1);save();cartView()});
+      r.appendChild(t);r.appendChild(x);pc.appendChild(r)});
+    var T=el("div","tot");T.appendChild(el("span","","Total"));T.appendChild(el("span","",tot?fcfa(tot):"—"));pc.appendChild(T);
+    var go=el("a","btn","Commander sur WhatsApp");go.target="_blank";go.rel="noopener";
+    go.href=wa("Bonjour THE K SHOP, je souhaite commander :\n"+lines.join("\n")+(tot?"\nTotal : "+fcfa(tot):""));pc.appendChild(go);
+    var cl=el("button","btn ghost","Vider le panier");cl.type="button";cl.addEventListener("click",function(){cart=[];save();cartView()});pc.appendChild(cl);
+  }
+  $("fab").addEventListener("click",function(){cartView();show()});
+  $("x").addEventListener("click",closeM);ov.addEventListener("click",function(e){if(e.target===ov)closeM()});
+  addEventListener("keydown",function(e){if(e.key==="Escape"&&!ov.hidden)closeM()});
+  fab();
   function fill(id,l){var g=$(id);g.textContent="";l.forEach(function(p,i){var c=card(p);c.style.transitionDelay=(i%4)*80+"ms";g.appendChild(c)});window.rv&&window.rv(g);return l.length}
   function list(){
     var q=$("q").value.trim().toLowerCase();
     var n=fill("g-all",P.filter(function(p){return(filt==="Tout"||p.Categorie===filt)&&(!q||((p.Nom||"")+" "+(p.Description||"")).toLowerCase().indexOf(q)>=0)}));
     $("empty").style.display=n?"none":"block";
-    document.querySelectorAll(".chips button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-c")===filt)});
+    document.querySelectorAll("#v-boutique .chips button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-c")===filt)});
   }
   function links(){$("wa1").href=wa("Bonjour THE K SHOP, j’aimerais avoir des informations.");$("wa2").href=$("wa1").href}
-  document.querySelectorAll(".chips button,.cl").forEach(function(b){b.addEventListener("click",function(){filt=b.getAttribute("data-c");list()})});
+  document.querySelectorAll("#v-boutique .chips button,.cl").forEach(function(b){b.addEventListener("click",function(){filt=b.getAttribute("data-c");list()})});
   $("q").addEventListener("input",list);
   window.addEventListener("hashchange",show);show();links();list();
   window.shop=function(d){

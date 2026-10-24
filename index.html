@@ -409,7 +409,7 @@ input:focus-visible,textarea:focus-visible{background:rgba(255,255,255,.5)}
   function toast(m){var t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("on")},1700)}
   function save(){try{localStorage.setItem("kcart",JSON.stringify(cart))}catch(e){}fab()}
   function fab(){var f=$("fab"),n=0,t=0;cart.forEach(function(i){n+=i.q;t+=i.p*i.q});f.hidden=!n;f.textContent="🛍 Panier · "+n+(t?" · "+fcfa(t):"")}
-  function show(){ov.hidden=false;document.documentElement.style.overflow="hidden";$("x").focus()}
+  function showM(){ov.hidden=false;document.documentElement.style.overflow="hidden";$("x").focus()}
   function closeM(){ov.hidden=true;document.documentElement.style.overflow=""}
   function addCart(p,t,c,q){var k=[p.Nom,t,c].join("|"),f=cart.filter(function(i){return i.k===k})[0];
     if(f)f.q+=q;else cart.push({k:k,n:p.Nom,p:num(p.Prix),t:t,c:c,q:q});save();var b=$("fab");b.classList.remove("bump");void b.offsetWidth;b.classList.add("bump")}
@@ -446,7 +446,7 @@ input:focus-visible,textarea:focus-visible{background:rgba(255,255,255,.5)}
       if(sz.length&&!pick.t){err.textContent="Choisissez une taille.";return}
       if(co.length&&!pick.c){err.textContent="Choisissez une couleur.";return}
       addCart(p,pick.t,pick.c,q);closeM();toast("Ajouté au panier ✓")});
-    pc.appendChild(add);show();
+    pc.appendChild(add);showM();
   }
   function cartView(){
     pc.textContent="";pc.appendChild(el("h3","","Mon panier"));
@@ -465,7 +465,7 @@ input:focus-visible,textarea:focus-visible{background:rgba(255,255,255,.5)}
     go.href=wa("Bonjour THE K SHOP, je souhaite commander :\n"+lines.join("\n")+(tot?"\nTotal : "+fcfa(tot):""));pc.appendChild(go);
     var cl=el("button","btn ghost","Vider le panier");cl.type="button";cl.addEventListener("click",function(){cart=[];save();cartView()});pc.appendChild(cl);
   }
-  $("fab").addEventListener("click",function(){cartView();show()});
+  $("fab").addEventListener("click",function(){cartView();showM()});
   $("x").addEventListener("click",closeM);ov.addEventListener("click",function(e){if(e.target===ov)closeM()});
   addEventListener("keydown",function(e){if(e.key==="Escape"&&!ov.hidden)closeM()});
   fab();
